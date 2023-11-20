@@ -6,6 +6,8 @@ import com.khodedev.app.common.types.Scope;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class DemoController {
 
@@ -26,10 +28,10 @@ public class DemoController {
         return "This is an api!";
     }
 
-    @Public
+//    @Public
     @GetMapping("/category")
-    @KeycloakAuthorz(scope = Scope.UPDATE, resource = "category")
-    public String getCategory() {
-        return "Category data";
+    @KeycloakAuthorz(scope = Scope.READ, resource = "category")
+    public List<String> getCategory() {
+        return List.of("Category 1", "Category 2", "Category 3");
     }
 }

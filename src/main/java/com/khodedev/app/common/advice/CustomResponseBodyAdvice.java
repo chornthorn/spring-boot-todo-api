@@ -47,11 +47,11 @@ public class CustomResponseBodyAdvice implements ResponseBodyAdvice<Object> {
             @NonNull ServerHttpResponse response
     ) {
         if (body instanceof ErrorResponse error) {
-            return new ErrorResponse(error.getStatusCode(), error.getMessage(), error.getPath(), error.getData());
+            return new ErrorResponse(error.getStatusCode(), error.getMessage(), error.getData());
         } else if (body instanceof String | body instanceof Number || body instanceof Boolean || body instanceof Character) {
             return body;
         } else {
-            return new ResponseWrapper<>("success", 200, request.getURI().getPath(), body);
+            return new ResponseWrapper<>("success", 200, body);
         }
     }
 }

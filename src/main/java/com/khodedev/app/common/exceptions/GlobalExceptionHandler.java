@@ -25,7 +25,6 @@ public class GlobalExceptionHandler {
         var errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 ex.getMessage(),
-                request.getRequestURI(),
                 List.of()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
@@ -36,7 +35,6 @@ public class GlobalExceptionHandler {
         var errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage(),
-                request.getRequestURI(),
                 List.of()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -47,10 +45,19 @@ public class GlobalExceptionHandler {
         var errorResponse = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
                 ex.getMessage(),
-                request.getRequestURI(),
                 List.of()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException ex, HttpServletRequest request) {
+        var errorResponse = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage(),
+                List.of()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -62,7 +69,6 @@ public class GlobalExceptionHandler {
         var errorResponse = new ErrorResponse(
                 HttpStatus.UNPROCESSABLE_ENTITY.value(),
                 "Validation failed",
-                request.getRequestURI(),
                 List.of(errorMessages)
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
@@ -73,7 +79,6 @@ public class GlobalExceptionHandler {
         var errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 ex.getMessage(),
-                request.getRequestURI(),
                 List.of()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -84,7 +89,6 @@ public class GlobalExceptionHandler {
         var errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 ex.getMessage(),
-                request.getRequestURI(),
                 List.of()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

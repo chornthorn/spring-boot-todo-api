@@ -15,6 +15,5 @@ import java.util.Map;
 public class ErrorResponse {
     private int statusCode;
     private String message;
-    private String path;
     private List<Map<String, List<String>>> data;
 }

@@ -1,5 +1,6 @@
 package com.khodedev.app.common.filters;
 
+import com.khodedev.app.common.exceptions.UnauthorizedException;
 import com.khodedev.app.common.services.JwtTokenValidator;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,27 +28,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        var isPublic = request.getAttribute("isPublic");
+        try {
+            // Check if the endpoint is marked as public, allowing unrestricted access
+            var isPublic = request.getAttribute("isPublic");
+            if (isPublic != null && (boolean) isPublic) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-        if (isPublic != null && (boolean) isPublic) {
+            // Extract and validate the Authorization header
+            final String authorizationHeader = request.getHeader("Authorization");
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                throw new UnauthorizedException("Invalid token");
+            }
+
+            // Extract the token and validate it using JwtTokenValidator
+            final String token = authorizationHeader.substring(7);
+            if (!jwtTokenValidator.validateToken(token)) {
+                throw new UnauthorizedException("Invalid token");
+            }
+
+            // Continue with the filter chain if the token is valid
             filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            log.info("JwtAuthenticationFilter is running...");
+        } catch (UnauthorizedException e) {
+            // Handle UnauthorizedException by setting status code and continuing with the filter chain
+            response.setStatus(401);
+            request.setAttribute("statusCode", 401);
             filterChain.doFilter(request, response);
-            return;
         }
-
-        final String token = authorizationHeader.substring(7);
-        if (!jwtTokenValidator.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-
-        filterChain.doFilter(request, response);
-        log.info("JwtAuthenticationFilter is running...");
     }
 }

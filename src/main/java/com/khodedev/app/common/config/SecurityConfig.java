@@ -1,6 +1,5 @@
 package com.khodedev.app.common.config;
 
-
 import com.khodedev.app.common.filters.JwtAuthenticationFilter;
 import com.khodedev.app.common.filters.KeycloakAuthorzFilter;
 import com.khodedev.app.common.filters.PublicAccessFilter;
@@ -43,7 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         c -> {
                             c.requestMatchers("/users").permitAll();
-                            c.requestMatchers("/error").permitAll();
+                            c.requestMatchers("/error/**").permitAll();
                             c.requestMatchers("/**").access(authorizationDecisionManager());
                             c.anyRequest().authenticated();
                         }
@@ -52,18 +51,42 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Creates an AuthorizationManager for handling authorization decisions based on the provided context.
+     *
+     * @return An AuthorizationManager instance.
+     */
     private AuthorizationManager<RequestAuthorizationContext> authorizationDecisionManager() {
         return (auth, ctx) -> {
-            var isPublic = ctx.getRequest().getAttribute("isPublic");
+            log.info("Authorization Decision Manager is running...");
 
+            // Check if the request is marked as public, allowing unrestricted access
+            var isPublic = ctx.getRequest().getAttribute("isPublic");
             if (isPublic != null && (boolean) isPublic) {
                 return new AuthorizationDecision(true);
             }
 
+            // Check if no Authorization header is present in the request
+            var authorizationHeader = ctx.getRequest().getHeader("Authorization");
+            if (authorizationHeader == null) {
+                // Set status code to 401 (Unauthorized)
+                ctx.getRequest().setAttribute("statusCode", 401);
+                return new AuthorizationDecision(false); // If false, it will result in a 403 (Forbidden)
+            }
+
+            // Extract resource, scope, and access token from the request attributes and headers
             var resource = (String) ctx.getRequest().getAttribute("resource");
             var scope = (String) ctx.getRequest().getAttribute("scope");
             var accessToken = ctx.getRequest().getHeader("Authorization");
 
+            // Check if resource or scope is missing
+            if (resource == null || scope == null) {
+                // Set status code to 403 (Forbidden)
+                ctx.getRequest().setAttribute("statusCode", 403);
+                return new AuthorizationDecision(false);
+            }
+
+            // Check authorization using the KeycloakAuthorizationService
             var hasAuthority = keycloakAuthorizationService.checkPermission(accessToken, resource, scope);
             return new AuthorizationDecision(hasAuthority);
         };

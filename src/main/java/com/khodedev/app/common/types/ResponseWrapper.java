@@ -12,6 +12,5 @@ import lombok.NoArgsConstructor;
 public class ResponseWrapper<T> {
     private String message;
     private int statusCode;
-    private String path;
     private T data;
 }

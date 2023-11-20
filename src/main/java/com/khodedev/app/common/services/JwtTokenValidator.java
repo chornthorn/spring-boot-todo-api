@@ -1,5 +1,6 @@
 package com.khodedev.app.common.services;
 
+import com.khodedev.app.common.exceptions.UnauthorizedException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,6 @@ public class JwtTokenValidator {
             return true;
         } catch (Exception e) {
             log.info("Invalid token: " + e.getMessage());
-            // Token validation failed
             return false;
         }
     }
