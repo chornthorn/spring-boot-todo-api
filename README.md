@@ -11,6 +11,7 @@ These instructions will get you a copy of the project up and running on your loc
 - Java 17 or higher
 - Maven
 - IntelliJ IDEA 2023.2.5 or any preferred IDE
+- Docker Engine 20.10.8 or higher
 
 ### Installing
 
