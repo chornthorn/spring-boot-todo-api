@@ -41,7 +41,6 @@ public class SecurityConfig {
                 .addFilterBefore(new KeycloakAuthorzFilter(handlerMapping), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(
                         c -> {
-                            c.requestMatchers("/users").permitAll();
                             c.requestMatchers("/error/**").permitAll();
                             c.requestMatchers("/**").access(authorizationDecisionManager());
                             c.anyRequest().authenticated();
