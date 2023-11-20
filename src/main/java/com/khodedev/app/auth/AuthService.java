@@ -39,7 +39,7 @@ public class AuthService {
         log.info("Attempting login for username: " + loginDto.getUsername());
         try {
             validateLoginDto(loginDto);
-            String url = buildTokenEndpointUrl();
+            String url = buildEndpointUrl("token");
             String body = buildTokenRequestBody(loginDto);
             HttpHeaders headers = createHeaders();
             return sendTokenRequest(url, body, headers, "Invalid username or password");
@@ -72,10 +72,10 @@ public class AuthService {
         }
     }
 
-    private String buildTokenEndpointUrl() {
+    private String buildEndpointUrl(String endpoint) {
         return UriComponentsBuilder
                 .fromUriString(keycloakAuthorizationServer)
-                .pathSegment("realms", realm, "protocol", "openid-connect", "token")
+                .pathSegment("realms", realm, "protocol", "openid-connect", endpoint)
                 .build()
                 .toUriString();
     }
@@ -99,7 +99,7 @@ public class AuthService {
         try {
             String refreshTokenWithoutBearer = refreshToken.substring(7); // remove "Bearer " from the token
             validateRefreshToken(refreshTokenWithoutBearer);
-            String url = buildTokenEndpointUrl();
+            String url = buildEndpointUrl("token");
             String body = buildRefreshTokenRequestBody(refreshTokenWithoutBearer);
             HttpHeaders headers = createHeaders();
             return sendTokenRequest(url, body, headers, "Invalid refresh token");
@@ -134,7 +134,7 @@ public class AuthService {
         try {
             String refreshTokenWithoutBearer = refreshToken.substring(7); // remove "Bearer " from the token
             validateRefreshToken(refreshTokenWithoutBearer);
-            String url = buildLogoutEndpointUrl();
+            String url = buildEndpointUrl("logout");
             String body = buildLogoutRequestBody(refreshTokenWithoutBearer);
             HttpHeaders headers = createHeaders();
             return sendLogoutRequest(url, body, headers, "Invalid refresh token");
@@ -156,14 +156,6 @@ public class AuthService {
         }
 
         return ResponseEntity.badRequest().build();
-    }
-
-    private String buildLogoutEndpointUrl() {
-        return UriComponentsBuilder
-                .fromUriString(keycloakAuthorizationServer)
-                .pathSegment("realms", realm, "protocol", "openid-connect", "logout")
-                .build()
-                .toUriString();
     }
 
     private String buildLogoutRequestBody(String refreshToken) {
