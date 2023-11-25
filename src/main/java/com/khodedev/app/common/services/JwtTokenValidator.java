@@ -1,6 +1,5 @@
 package com.khodedev.app.common.services;
 
-import com.khodedev.app.common.exceptions.UnauthorizedException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,8 +32,8 @@ public class JwtTokenValidator {
 
     private PublicKey parsePublicKey(String publicKey) throws Exception {
         byte[] publicBytes = Base64.getDecoder().decode(publicKey);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-       return keyFactory.generatePublic(keySpec);
+        var keySpec = new X509EncodedKeySpec(publicBytes);
+        var keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(keySpec);
     }
 }

@@ -1,8 +1,10 @@
 package com.khodedev.app.common.services;
 
+import com.khodedev.app.common.constants.Constants;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -41,17 +43,7 @@ public class KeycloakAuthorizationService {
             String endpoint = keycloakAuthorizationServer + "/realms/" + realm + "/protocol/openid-connect/token";
 
             // Construct the request body with necessary parameters
-            String requestBody = "grant_type=urn:ietf:params:oauth:grant-type:uma-ticket" +
-                    "&audience=" + clientId +
-                    "&permission=" + resource + "#" + scope;
-
-            // Set up headers for the request
-            var headers = new org.springframework.http.HttpHeaders();
-            headers.add("Authorization", accessToken);
-            headers.add("Content-Type", "application/x-www-form-urlencoded");
-
-            // Create the HTTP request entity
-            var request = new HttpEntity<>(requestBody, headers);
+            var request = getStringHttpEntity(accessToken, resource, scope);
 
             // Make a POST request to the Keycloak authorization server
             var response = restTemplate.postForEntity(endpoint, request, String.class);
@@ -63,5 +55,19 @@ public class KeycloakAuthorizationService {
             log.severe(e.getMessage());
             return false;
         }
+    }
+
+    private HttpEntity<String> getStringHttpEntity(String accessToken, String resource, String scope) {
+        String requestBody = "grant_type=urn:ietf:params:oauth:grant-type:uma-ticket" +
+                "&audience=" + clientId +
+                "&permission=" + resource + "#" + scope;
+
+        // Set up headers for the request
+        var headers = new HttpHeaders();
+        headers.add(Constants.AUTHORIZATION, accessToken);
+        headers.add("Content-Type", "application/x-www-form-urlencoded");
+
+        // Create the HTTP request entity
+        return new HttpEntity<>(requestBody, headers);
     }
 }

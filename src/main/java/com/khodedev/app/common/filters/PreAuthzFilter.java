@@ -1,6 +1,7 @@
 package com.khodedev.app.common.filters;
 
-import com.khodedev.app.common.annotations.KeycloakAuthorz;
+import com.khodedev.app.common.annotations.PreAuthz;
+import com.khodedev.app.common.constants.Constants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,11 +17,11 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import java.io.IOException;
 
 @Log
-public class KeycloakAuthorzFilter extends OncePerRequestFilter {
+public class PreAuthzFilter extends OncePerRequestFilter {
 
     private final RequestMappingHandlerMapping handlerMapping;
 
-    public KeycloakAuthorzFilter(RequestMappingHandlerMapping handlerMapping) {
+    public PreAuthzFilter(RequestMappingHandlerMapping handlerMapping) {
         this.handlerMapping = handlerMapping;
     }
 
@@ -33,7 +34,7 @@ public class KeycloakAuthorzFilter extends OncePerRequestFilter {
 
         try {
             // Check if the endpoint is marked as public, allowing unrestricted access
-            var isPublic = request.getAttribute("isPublic");
+            var isPublic = request.getAttribute(Constants.IS_PUBLIC);
             if (isPublic != null && (boolean) isPublic) {
                 filterChain.doFilter(request, response);
                 return;
@@ -43,27 +44,15 @@ public class KeycloakAuthorzFilter extends OncePerRequestFilter {
             HandlerExecutionChain handlerExecutionChain = handlerMapping.getHandler(request);
 
             if (handlerExecutionChain != null) {
-                // Extract handler method and check for the KeycloakAuthorz annotation
+                // Extract handler method and check for the PreAuthz annotation
                 HandlerMethod handlerMethod = (HandlerMethod) handlerExecutionChain.getHandler();
-                KeycloakAuthorz keycloakAuthorz = findKeycloakAuthorzAnnotation(handlerMethod);
-
-                if (keycloakAuthorz != null) {
-                    // Check if Authorization header is present
-                    String accessToken = request.getHeader("Authorization");
-                    if (accessToken == null) {
-                        // Set response status to 401 (Unauthorized) if Authorization header is missing
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    } else {
-                        // Set resource and scope attributes based on KeycloakAuthorz annotation
-                        request.setAttribute("resource", keycloakAuthorz.resource());
-                        request.setAttribute("scope", keycloakAuthorz.scope().getScope());
-                    }
-                }
+                var preAuthz = findPreAuthzAnnotation(handlerMethod);
+                checkPreAuthz(request, response, preAuthz);
             }
 
             // Continue with the filter chain
             filterChain.doFilter(request, response);
-            log.info("KeycloakAuthorzFilter is running...");
+            log.info("PreAuthzFilter is running...");
 
         } catch (Exception e) {
             // Handle exceptions that may occur while processing the request
@@ -71,12 +60,27 @@ public class KeycloakAuthorzFilter extends OncePerRequestFilter {
         }
     }
 
-    private KeycloakAuthorz findKeycloakAuthorzAnnotation(HandlerMethod handlerMethod) {
-        // Find KeycloakAuthorz annotation on the method or the class level
-        KeycloakAuthorz keycloakAuthorz = AnnotationUtils.findAnnotation(handlerMethod.getMethod(), KeycloakAuthorz.class);
-        if (keycloakAuthorz == null) {
-            keycloakAuthorz = AnnotationUtils.findAnnotation(handlerMethod.getBeanType(), KeycloakAuthorz.class);
+    private void checkPreAuthz(HttpServletRequest request, HttpServletResponse response, PreAuthz preAuthz) {
+        if (preAuthz != null) {
+            // Check if Authorization header is present
+            String accessToken = request.getHeader(Constants.AUTHORIZATION);
+            if (accessToken == null) {
+                // Set response status to 401 (Unauthorized) if Authorization header is missing
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            } else {
+                // Set resource and scope attributes based on PreAuthz annotation
+                request.setAttribute(Constants.RESOURCE, preAuthz.resource());
+                request.setAttribute(Constants.SCOPE, preAuthz.scope().getScope());
+            }
         }
-        return keycloakAuthorz;
+    }
+
+    private PreAuthz findPreAuthzAnnotation(HandlerMethod handlerMethod) {
+        // Find PreAuthz annotation on the method or the class level
+        var preAuthz = AnnotationUtils.findAnnotation(handlerMethod.getBeanType(), PreAuthz.class);
+        if (preAuthz == null) {
+            preAuthz = AnnotationUtils.findAnnotation(handlerMethod.getMethod(), PreAuthz.class);
+        }
+        return preAuthz;
     }
 }

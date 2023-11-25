@@ -1,6 +1,7 @@
 package com.khodedev.app.common.filters;
 
 import com.khodedev.app.common.annotations.Public;
+import com.khodedev.app.common.constants.Constants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,7 +49,7 @@ public class PublicAccessFilter extends OncePerRequestFilter {
             if (publicAccess != null) {
                 // The endpoint is marked as public, allowing unrestricted access
                 log.info("PublicAccessFilter: " + request.getRequestURI() + " is public");
-                request.setAttribute("isPublic", true);
+                request.setAttribute(Constants.IS_PUBLIC, true);
                 filterChain.doFilter(request, response);
                 return;
             }

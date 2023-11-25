@@ -1,5 +1,6 @@
 package com.khodedev.app.common.filters;
 
+import com.khodedev.app.common.constants.Constants;
 import com.khodedev.app.common.exceptions.UnauthorizedException;
 import com.khodedev.app.common.services.JwtTokenValidator;
 import jakarta.servlet.FilterChain;
@@ -30,14 +31,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             // Check if the endpoint is marked as public, allowing unrestricted access
-            var isPublic = request.getAttribute("isPublic");
+            var isPublic = request.getAttribute(Constants.IS_PUBLIC);
             if (isPublic != null && (boolean) isPublic) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
             // Extract and validate the Authorization header
-            final String authorizationHeader = request.getHeader("Authorization");
+            final String authorizationHeader = request.getHeader(Constants.AUTHORIZATION);
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 throw new UnauthorizedException("Invalid token");
             }
@@ -54,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (UnauthorizedException e) {
             // Handle UnauthorizedException by setting status code and continuing with the filter chain
             response.setStatus(401);
-            request.setAttribute("statusCode", 401);
+            request.setAttribute(Constants.STATUS_CODE, 401);
             filterChain.doFilter(request, response);
         }
     }

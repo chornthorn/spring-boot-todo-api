@@ -9,8 +9,9 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface KeycloakAuthorz {
-    String resource();
-    Scope scope();
+public @interface PreAuthz {
+    String resource() default "";
+
+    Scope scope() default Scope.READ;
 }
 

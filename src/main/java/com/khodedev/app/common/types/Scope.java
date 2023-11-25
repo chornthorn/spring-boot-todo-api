@@ -1,7 +1,7 @@
 package com.khodedev.app.common.types;
 
 public enum Scope {
-    READ, READBY, WRITE, UPDATE, DELETE;
+    READ, READBY, CREATE, UPDATE, DELETE;
 
     public static Scope fromString(String scope) {
         for (Scope s : Scope.values()) {
