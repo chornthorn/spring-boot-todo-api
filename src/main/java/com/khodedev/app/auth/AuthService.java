@@ -7,6 +7,7 @@ import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -30,6 +31,9 @@ public class AuthService {
 
     @Value("${keycloak.client-secret}")
     private String clientSecret;
+
+    @Value("${keycloak.redirect-uri}")
+    private String redirectUri;
 
     public AuthService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -163,4 +167,37 @@ public class AuthService {
                 "&client_secret=" + clientSecret +
                 "&refresh_token=" + refreshToken;
     }
+
+    // login with keycloak ui
+    public String getAuthorizationUrl() {
+        return UriComponentsBuilder
+                .fromHttpUrl(keycloakAuthorizationServer)
+                .pathSegment("realms", realm, "protocol", "openid-connect", "auth")
+                .queryParam("client_id", clientId)
+                .queryParam("response_type", "code")
+                .queryParam("scope", "openid")
+                .queryParam("redirect_uri", redirectUri)
+                .build()
+                .toUriString();
+    }
+
+    // exchange code for token
+    public String exchangeCodeForToken(String code) {
+        String url = UriComponentsBuilder
+                .fromHttpUrl(keycloakAuthorizationServer)
+                .pathSegment("realms", realm, "protocol", "openid-connect", "token")
+                .build()
+                .toUriString();
+
+        var map = new LinkedMultiValueMap<>();
+        map.add("grant_type", "authorization_code");
+        map.add("client_id", clientId);
+        map.add("client_secret", clientSecret);
+        map.add("code", code);
+        map.add("scope", "openid email profile");
+        map.add("redirect_uri", redirectUri);
+        var response = restTemplate.postForEntity(url, map, String.class);
+        return response.getBody();
+    }
+
 }
